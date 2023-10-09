@@ -3,3 +3,5 @@ softwares
 test_data/raw_big
 test_data/dorado_raw
 test_data/basecalled
+test_data/.*
+test_data/params*
