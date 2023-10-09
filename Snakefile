@@ -1,12 +1,13 @@
 # Pipeline to basecall the raw data generated from our nanopore
 
-# --------- workflow parameters ---------
-
-# Define input and output directories
 DATA_DIR = "test_data"
-INPUT_DIR = DATA_DIR + "/raw_big"
+# TMP_DIR = DATA_DIR + "/tmp"
+TMP_DIR = os.environ.get(
+    "TMPDIR", DATA_DIR + "/tmp"
+)  # Default to '/tmp' if $TMPDIR is not set
 OUTPUT_DIR = DATA_DIR + "/basecalled"
 PARAMETER_FILE = DATA_DIR + "/params.tsv"  # Used as a log file for the run
+BARCODES = [str(i).zfill(2) for i in range(1, 25)]
 
 # Path of Dorado binary
 dorado_bin = "softwares/dorado-0.3.2-linux-x64/bin/dorado"
@@ -78,36 +79,22 @@ guppy_barcoder_bin = "softwares/ont-guppy-cpu/bin/guppy_barcoder"
 # --------- workflow ---------
 
 
-# # Function to generate input file paths
-# def input_files(wildcards):
-#     return expand(
-#         "{INPUT_DIR}/{pod5_file}", INPUT_DIR=INPUT_DIR, pod5_file=wildcards.pod5_file
-#     )
-
-
-# # Function to generate output file paths
-# def output_files(wildcards):
-#     return expand(
-#         "{OUTPUT_DIR}/{barcode}/fastq_pass/{{samples}}.fastq.gz",
-#         OUTPUT_DIR=OUTPUT_DIR,
-#         barcode=wildcards.barcode,
-#         samples=par_dict["barcodes"].split(","),
-#     )
-
-
 rule all:
     input:
-        OUTPUT_DIR,
+        barcodes=expand(
+            OUTPUT_DIR + "/barcode{barcode}.fastq.gz",
+            barcode=BARCODES,
+        ),
 
 
 rule basecall:
     message:
         "Basecalling the reads using Dorado model {params.model}."
     input:
-        INPUT_DIR,
+        DATA_DIR + "/raw",
     output:
-        directory=directory(DATA_DIR + "/dorado_raw"),
-        file=DATA_DIR + "/dorado_raw/basecalled.fastq",
+        directory=directory(TMP_DIR + "/dorado_raw"),
+        file=TMP_DIR + "/dorado_raw/basecalled.fastq",
     params:
         model="softwares/dorado-0.3.2-linux-x64/bin/dna_r10.4.1_e8.2_400bps_sup@v4.2.0",
     shell:
@@ -122,7 +109,7 @@ rule demultiplex:
     input:
         rules.basecall.output.directory,
     output:
-        directory=directory(OUTPUT_DIR),
+        directory=directory(TMP_DIR + "/barcoded"),
     params:
         kit="SQK-RBK114-24",
     threads: 16
@@ -138,46 +125,42 @@ rule demultiplex:
         """
 
 
+rule concatenate:
+    message:
+        "Concatenating the data for each barcode into a single file."
+    input:
+        input_dir=rules.demultiplex.output.directory,
+    output:
+        barcodes=expand(
+            TMP_DIR + "/concatenated/barcode{barcode}.fastq",
+            barcode=BARCODES,
+        ),
+        unclassified=TMP_DIR + "/concatenated/unclassified.fastq",
+        output_dir=directory(TMP_DIR + "/concatenated"),
+    shell:
+        """
+        python snakecommands.py concatenate {input.input_dir} {output.output_dir}
+        """
+
+
+rule compress:
+    message:
+        "Generating the final file {output.output_file}."
+    input:
+        input_file=TMP_DIR + "/concatenated/barcode{barcode}.fastq",
+    output:
+        output_file=OUTPUT_DIR + "/barcode{barcode}.fastq.gz",
+    shell:
+        """
+        gzip -c {input} > {output}
+        echo lol
+        """
+
+
 rule clean:
     message:
         "Cleaning up the output folder."
     shell:
         """
-        rm -rf {OUTPUT_DIR}
-        rm -rf {DATA_DIR}/dorado_raw
+        rm -rf {DATA_DIR}/final
         """
-
-
-# # Process that concatenates and compresses fastq files by barcode
-# rule concatenate_and_compress:
-#     input:
-#         barcode=lambda wildcards: wildcards.barcode,
-#         reads=glob_wildcards(output_files).samples,
-#     output:
-#         "{barcode}.fastq.gz",
-#     shell:
-#         """
-#         cat {{reads}} | gzip -c > {output}
-#         chmod 444 {output}
-#         """
-# # Process for creating a CSV file with basecalling statistics
-# rule basecalling_live_report:
-#     input:
-#         bc_files=expand("{par_dict['parDir']}/{bcstats_filename}", par_dict=par_dict),
-#         reads=glob_wildcards(output_files).samples,
-#     output:
-#         "{par_dict['parDir']}/{bcstats_filename}",
-#     run:
-#         # Decompress and generate stats (modify as needed)
-#         shell(
-#             "gzip -dc {{reads}} > reads.fastq && "
-#             "python3 {snakemake.wildcards.par_dict['parDir']}/basecall_stats.py reads.fastq && "
-#             "tail -n +2 basecalling_stats.csv >> {output} && "
-#             "rm reads.fastq"
-#         )
-# # Create a list of all barcodes
-# barcodes = par_dict["barcode_id"].split(",")
-# Workflow
-# rule all:
-#     input:
-#         expand("concatenate_and_compress/{barcode}.fastq.gz", barcode=barcodes),
