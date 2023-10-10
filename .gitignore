@@ -5,3 +5,5 @@ test_data/dorado_raw
 test_data/basecalled
 test_data/.*
 test_data/params*
+test_data/final
+test_data/statistics
