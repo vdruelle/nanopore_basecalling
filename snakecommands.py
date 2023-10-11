@@ -1,5 +1,6 @@
 import click
 
+
 @click.group()
 def cli():
     pass
@@ -11,8 +12,8 @@ def cli():
 @click.argument("dorado_model", type=str)
 @click.argument("time", type=str)
 def generate_log_file(log_file, dorado_bin, dorado_model, time):
-    import subprocess
     import pathlib
+    import subprocess
 
     logfile = pathlib.Path(log_file)
     data_dir = logfile.parent
@@ -100,7 +101,7 @@ def make_plots(stats_file):
 
     # log-length distribution by barcode, normalized
     plt.figure()
-    sns.boxplot(data=df, orient="v")
+    sns.violinplot(data=df, orient="v", log_scale=True)
     plt.yscale("log")
     plt.ylabel("Length of reads")
     plt.xticks(rotation=80)
