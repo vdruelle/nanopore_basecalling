@@ -1,19 +1,22 @@
 import click
 
-
 @click.group()
 def cli():
     pass
 
 
 @cli.command()
-@click.argument("data_dir", type=click.Path(exists=True))
+@click.argument("log_file", type=click.Path())
 @click.argument("dorado_bin", type=click.Path(exists=True))
-@click.argument("time", type=click.Path())
-def generate_log_file(data_dir, dorado_bin, time):
-    import os
+@click.argument("dorado_model", type=str)
+@click.argument("time", type=str)
+def generate_log_file(log_file, dorado_bin, dorado_model, time):
     import subprocess
-    logfile = data_dir + "/params_" + time + ".log"
+    import pathlib
+
+    logfile = pathlib.Path(log_file)
+    data_dir = logfile.parent
+    data_dir.mkdir(exist_ok=True)
 
     reporemote = subprocess.check_output("git remote -v | head -n 1", shell=True).decode()
     commitID = subprocess.check_output("git rev-parse HEAD", shell=True).decode()
@@ -26,8 +29,9 @@ def generate_log_file(data_dir, dorado_bin, time):
     The code is stored in the repository: {reporemote}
     The current commit is: {commitID}
     Dorado version: {doradover}
-    Input dir: {os.path.join(data_dir, "raw")}
-    Output dir: {os.path.join(data_dir, "basecalled")}
+    Dorado model: {dorado_model}
+    Input dir: {data_dir / "raw"}
+    Output dir: {data_dir / "basecalled"}
 
     Parameter file:
 
