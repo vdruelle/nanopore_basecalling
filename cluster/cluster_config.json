@@ -3,13 +3,16 @@
         "time": "00:29:00",
         "qos": "30min",
         "cpus": 1,
-        "mem": "4G"
+        "mem": "4G",
+        "partition": "scicore"
     },
     "basecall": {
         "time": "05:55:00",
         "qos": "6hours",
         "mem": "16G",
-        "options": "--nodes=1 --partition=a100 --gres=gpu:1 --cpus-per-gpu=8"
+        "gres": "gpu:1",
+        "cpus": 16,
+        "partition": "a100"
     },
     "demultiplex": {
         "time": "05:55:00",

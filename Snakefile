@@ -5,8 +5,8 @@ import os
 
 DATA_DIR = "test_data"
 INPUT_DIR = DATA_DIR + "/raw"
-# TMP_DIR = DATA_DIR + "/tmp"
-TMP_DIR = os.environ.get("TMPDIR", DATA_DIR + "/tmp")  # Default to '/tmp' if $TMPDIR is not set
+TMP_DIR = DATA_DIR + "/tmp"
+# TMP_DIR = os.environ.get("TMPDIR", DATA_DIR + "/tmp")  # Default to '/tmp' if $TMPDIR is not set
 OUTPUT_DIR = DATA_DIR + "/final"
 STATISTICS_DIR = DATA_DIR + "/statistics"
 BARCODES = [str(ii) for ii in range(1, 25)]
