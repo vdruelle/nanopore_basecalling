@@ -1,11 +1,12 @@
-cluster: "sbatch --time={cluster.time} --mem={cluster.mem} --cpus-per-task={cluster.cpus} --qos={cluster.qos} --partition={cluster.partition}"
+cluster: "sbatch --time={cluster.time} --mem={cluster.mem} --cpus-per-task={cluster.cpus} --qos={cluster.qos} {cluster.extra}"
 jobs: 20
 jobscript: "cluster/slurm_submit.sh"
 cluster-config: "cluster/cluster_config.json"
 cluster-cancel: scancel
 jobname: "{rulename}_{jobid}"
-latency-wait: 90
+latency-wait: 30
 
 use-conda: True
 rerun-incomplete: True
 conda-frontend: "mamba"
+printshellcmds: False

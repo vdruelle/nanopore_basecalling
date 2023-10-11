@@ -1,10 +1,6 @@
 /softwares
 /.snakemake
-/test_data/raw_big
-/test_data/dorado_raw
-/test_data/basecalled
-/test_data/.*
-/test_data/params*
-/test_data/final
-/test_data/statistics
+/test_data/*
+!/test_data/raw
+!/test_data/params.tsv
 /log
