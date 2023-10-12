@@ -10,8 +10,10 @@ def cli():
 @click.argument("log_file", type=click.Path())
 @click.argument("dorado_bin", type=click.Path(exists=True))
 @click.argument("dorado_model", type=str)
+@click.argument("flow_cell", type=str)
+@click.argument("nanopore_kit", type=str)
 @click.argument("time", type=str)
-def generate_log_file(log_file, dorado_bin, dorado_model, time):
+def generate_log_file(log_file, dorado_bin, dorado_model, flow_cell, nanopore_kit, time):
     import pathlib
     import subprocess
 
@@ -24,19 +26,21 @@ def generate_log_file(log_file, dorado_bin, dorado_model, time):
     doradover = subprocess.check_output(dorado_bin + " -v 2>&1", shell=True).decode()
 
     log_text = f"""
-    Log-file for the basecalling executed by the Snakemake script.
-    Execution time: {time}
+Log-file for the basecalling executed by the Snakemake script.
+Execution time: {time}
 
-    The code is stored in the repository: {reporemote}
-    The current commit is: {commitID}
-    Dorado version: {doradover}
-    Dorado model: {dorado_model}
-    Input dir: {data_dir / "raw"}
-    Output dir: {data_dir / "basecalled"}
+The code is stored in the repository: {reporemote}
+The current commit is: {commitID}
+Dorado version: {doradover}
+Dorado model: {dorado_model}
+Flow cell: {flow_cell}
+Nanopore kit: {nanopore_kit}
+Input dir: {data_dir / "raw"}
+Output dir: {data_dir / "basecalled"}
 
-    Parameter file:
+Parameter file:
 
-    """
+"""
 
     with open(logfile, "w") as file:
         file.write(log_text) # Writes the infos from the log_text

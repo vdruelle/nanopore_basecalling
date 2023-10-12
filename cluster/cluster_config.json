@@ -9,9 +9,9 @@
     "basecall": {
         "time": "05:55:00",
         "qos": "6hours",
-        "mem": "16G",
-        "cpus": 8,
-        "extra": "--partition=a100 --nodes=1 --gres=gpu:1"
+        "mem": "300G",
+        "cpus": 128,
+        "extra": "--partition=a100 --nodes=1 --gres=gpu:4"
     },
     "demultiplex": {
         "time": "05:55:00",

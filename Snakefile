@@ -7,8 +7,9 @@ import os
 DORADO_BIN = "softwares/dorado-0.4.0-linux-x64/bin/dorado"
 DORADO_MODEL = "softwares/dorado_models/dna_r10.4.1_e8.2_400bps_sup@v4.2.0"
 NANOPORE_KIT = "SQK-RBK114-24"
+FLOW_CELL = "FLO-MIN114"
 DATA_DIR = "test_data"
-INPUT_DIR = DATA_DIR + "/raw"
+INPUT_DIR = DATA_DIR + "/raw_big"
 TMP_DIR = DATA_DIR + "/tmp"
 OUTPUT_DIR = DATA_DIR + "/final"
 STATISTICS_DIR = DATA_DIR + "/statistics"
@@ -19,9 +20,12 @@ LOGFILE = DATA_DIR + "/basecalling.log"
 # create log directory if it does not exists
 pathlib.Path("log").mkdir(exist_ok=True)
 
-# localrules: all, download_dorado_bin, download_dorado_model
 
-# Rule flag `temporary`
+localrules:
+    all,
+    generate_log_file,
+    clean,
+    clean_all,
 
 
 rule all:
@@ -30,52 +34,28 @@ rule all:
         unclassified=OUTPUT_DIR + "/unclassified.fastq.gz",
         plot1=STATISTICS_DIR + "/len_hist.png",
         plot2=STATISTICS_DIR + "/bp_per_barcode.png",
-
-
-# download and extract dorado binaries. The URL is in the config file.
-# rule download_dorado_bin:
-#     output:
-#         "softwares/dorado"
-#     params:
-#         url=config["dorado_url"]
-#     shell:
-#         """
-#         mkdir -p softwares
-#         wget {params.url} --directory softwares
-#         BN=$(basename {params.url} .tar.gz)
-#         FN=softwares/$BN.tar.gz
-#         ln -s $BN/bin/dorado softwares/dorado
-#         tar -xf $FN -C softwares --overwrite
-#         rm $FN
-#         """
-
-# # download desired dorado model, as per config file specification
-# rule download_dorado_model:
-#     input:
-#         drd=rules.download_dorado_bin.output
-#     output:
-#         f"softwares/dorado_models/{config['dorado_model']}"
-#     params:
-#         mdl=config["dorado_model"]
-#     shell:
-#         """
-#         mkdir -p software/dorado_models
-#         {input.drd} download --model {params.mdl} --directory {output}
-#         """
+        clean=DATA_DIR + "/.cleaned_dummy_file.txt",  # comment for debugging
 
 
 rule generate_log_file:
     output:
         LOGFILE,
     params:
-        ex_time=EXEC_TIME,
-        model=DORADO_MODEL,
         dorado=DORADO_BIN,
+        model=DORADO_MODEL,
+        flow_cell=FLOW_CELL,
+        kit=NANOPORE_KIT,
+        ex_time=EXEC_TIME,
     conda:
         "conda_envs/nanopore_basecalling.yml"
     shell:
         """
-        python snakecommands.py generate-log-file {output} {params.dorado} {params.model} {params.ex_time}
+        python snakecommands.py generate-log-file {output} \
+        {params.dorado} \
+        {params.model} \
+        {params.flow_cell} \
+        {params.kit} \
+        {params.ex_time}
         cat test_data/params.tsv >> {output}
         """
 
@@ -204,9 +184,14 @@ rule make_plots:
 rule clean:
     message:
         "Cleaning up the output folder."
+    input:
+        rules.make_plots.output.len_hist,
+    output:
+        DATA_DIR + "/.cleaned_dummy_file.txt",
     shell:
         """
         rm -rf {TMP_DIR}
+        touch {output}
         """
 
 
@@ -218,5 +203,37 @@ rule clean_all:
         rm -rf {OUTPUT_DIR}
         rm -rf {STATISTICS_DIR}
         rm -rf {TMP_DIR}
-        rm basecalling.log
+        rm -rf log
+        rm -f {OUTPUT_DIR}/basecalling.log
         """
+
+
+# download and extract dorado binaries. The URL is in the config file.
+# rule download_dorado_bin:
+#     output:
+#         "softwares/dorado"
+#     params:
+#         url=config["dorado_url"]
+#     shell:
+#         """
+#         mkdir -p softwares
+#         wget {params.url} --directory softwares
+#         BN=$(basename {params.url} .tar.gz)
+#         FN=softwares/$BN.tar.gz
+#         ln -s $BN/bin/dorado softwares/dorado
+#         tar -xf $FN -C softwares --overwrite
+#         rm $FN
+#         """
+# # download desired dorado model, as per config file specification
+# rule download_dorado_model:
+#     input:
+#         drd=rules.download_dorado_bin.output
+#     output:
+#         f"softwares/dorado_models/{config['dorado_model']}"
+#     params:
+#         mdl=config["dorado_model"]
+#     shell:
+#         """
+#         mkdir -p software/dorado_models
+#         {input.drd} download --model {params.mdl} --directory {output}
+#         """
