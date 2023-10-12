@@ -1,4 +1,4 @@
-/softwares
+/softwares/*
 /.snakemake
 /test_data/*
 !/test_data/raw
