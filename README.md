@@ -1,10 +1,11 @@
 # nanopore_basecalling
 
+## Introduction
 This pipeline is used to basecall raw data generated from a nanopore sequencing run (pod5). It performs the following steps:
 
 - Generate a log file with information about the basecalling process.
-- Basecall the reads using the Dorado model.
-- Split the reads based on detected barcodes and remove the barcodes from the reads.
+- Basecall the reads using Dorado.
+- Split the reads based on detected barcodes and trim the barcodes from the reads (Dorado default behaviour).
 - Convert the barcoded reads to FASTQ format.
 - Generate statistics for the barcoded reads.
 - Combine the statistics files for all the barcodes.
