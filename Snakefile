@@ -4,18 +4,20 @@ import time
 import os
 
 
+# pass the path to the folder as and argument when calling snakemake: --congig input=PATH
+DATA_DIR = config["run_dir"]
+INPUT_DIR = DATA_DIR + "/raw"
+TMP_DIR = DATA_DIR + "/tmp"
+OUTPUT_DIR = DATA_DIR + "/final"
+STATISTICS_DIR = DATA_DIR + "/statistics"
+EXEC_TIME = time.strftime("%Y-%m-%d_%H:%M:%S", time.localtime())
+LOGFILE = DATA_DIR + "/basecalling.log"
+
+BARCODES = [str(ii) for ii in range(1, 25)]
 DORADO_BIN = "softwares/dorado-0.4.0-linux-x64/bin/dorado"
 DORADO_MODEL = "softwares/dorado_models/dna_r10.4.1_e8.2_400bps_sup@v4.2.0"
 NANOPORE_KIT = "SQK-RBK114-24"
 FLOW_CELL = "FLO-MIN114"
-DATA_DIR = "test_data"
-INPUT_DIR = DATA_DIR + "/raw_big"
-TMP_DIR = DATA_DIR + "/tmp"
-OUTPUT_DIR = DATA_DIR + "/final"
-STATISTICS_DIR = DATA_DIR + "/statistics"
-BARCODES = [str(ii) for ii in range(1, 25)]
-EXEC_TIME = time.strftime("%Y-%m-%d_%H:%M:%S", time.localtime())
-LOGFILE = DATA_DIR + "/basecalling.log"
 
 # create log directory if it does not exists
 pathlib.Path("log").mkdir(exist_ok=True)
