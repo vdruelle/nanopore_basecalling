@@ -67,7 +67,7 @@ rule basecall:
         "Basecalling the reads using Dorado model {params.model}."
     input:
         input_dir=INPUT_DIR,
-        # logfile=LOGFILE,
+        logfile=LOGFILE,
     output:
         directory=directory(TMP_DIR + "/dorado_raw"),
         file=TMP_DIR + "/dorado_raw/basecalled.bam",
