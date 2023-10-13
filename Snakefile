@@ -13,8 +13,8 @@ STATISTICS_DIR = DATA_DIR + "/statistics"
 EXEC_TIME = time.strftime("%Y-%m-%d_%H:%M:%S", time.localtime())
 LOGFILE = DATA_DIR + "/basecalling.log"
 
-BARCODES = [str(ii) for ii in range(1, 25)]
-DORADO_BIN = "softwares/dorado-0.4.0-linux-x64/bin/dorado"
+BARCODES = [str(ii).zfill(2) for ii in range(1, 25)]
+DORADO_BIN = "softwares/dorado-0.4.1-linux-x64/bin/dorado"
 DORADO_MODEL = "softwares/dorado_models/dna_r10.4.1_e8.2_400bps_sup@v4.2.0"
 NANOPORE_KIT = "SQK-RBK114-24"
 FLOW_CELL = "FLO-MIN114"
@@ -67,7 +67,7 @@ rule basecall:
         "Basecalling the reads using Dorado model {params.model}."
     input:
         input_dir=INPUT_DIR,
-        logfile=LOGFILE,
+        # logfile=LOGFILE,
     output:
         directory=directory(TMP_DIR + "/dorado_raw"),
         file=TMP_DIR + "/dorado_raw/basecalled.bam",
@@ -95,13 +95,14 @@ rule demultiplex:
     conda:
         "conda_envs/nanopore_basecalling.yml"
     params:
-        kit=NANOPORE_KIT,
+        dorado=DORADO_BIN,
     threads: 4
-    shell:  # TODO make this more robust for unclassified barcodes
+    shell:
         """
         mkdir -p {output.directory}
-        samtools split {input} -f '{output.directory}/barcode_%#.bam' --threads {threads}
-        mv {output.directory}/barcode_0.bam {output.directory}/unclassified.bam
+        {params.dorado} demux --output-dir {output.directory} --no-classify {input} -t {threads}
+        cd {output.directory}
+        for file in SQK-RBK114-24_barcode*.bam; do mv "$file" "${{file/SQK-RBK114-24_barcode/barcode_}}"; done
         """
 
 

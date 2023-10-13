@@ -21,11 +21,11 @@ Start by cloning this repo (on the cluster, if aiming for cluster execution):
 git clone https://github.com/vdruelle/nanopore_basecalling.git
 ```
 
-Once this is done, you need to download dorado (https://github.com/nanoporetech/dorado, linux-x64 in our case), unpack it and move the folder called `dorado-0.4.0-linux-x64` to the directory `softwares/`.
+Once this is done, you need to download dorado (https://github.com/nanoporetech/dorado, linux-x64 in our case), unpack it and move the folder called `dorado-0.4.1-linux-x64` to the directory `softwares/`.
 
 You can then download the appropriate dorado model into the directory `softwares/doarado_models` by typing:
 ```
-./dorado-0.4.0-linux-x64/bin/dorado download --model dna_r10.4.1_e8.2_400bps_sup@v4.2.0 --directory sofwares/dorado_models
+./dorado-0.4.1-linux-x64/bin/dorado download --model dna_r10.4.1_e8.2_400bps_sup@v4.2.0 --directory sofwares/dorado_models
 ```
 
 Last you need to create the conda environment for the pipeline:
