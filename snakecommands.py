@@ -86,7 +86,7 @@ def combine_stats(stats_dir, output):
         # Assign the DataFrame to the column with the header as the column label
         combined_df = pd.concat([combined_df,df], axis=1)
 
-    sorted_headers = [f"barcode_{ii}" for ii in range(1,25)]
+    sorted_headers = [f"barcode_{str(ii).zfill(2)}" for ii in range(1, 25)]
     sorted_headers += ["unclassified"]
     combined_df = combined_df[sorted_headers]
     combined_df.to_csv(output, index=False, sep="\t")
