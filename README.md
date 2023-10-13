@@ -43,7 +43,7 @@ conda activate nanopore_basecalling
 
 Your run folder must contain a subfolder named `raw` in which all your `.pod5` are located as well as the `params.tsv` file which you need to update. This is used for logging to keep track of the run. Start the pipeline, giving the path to your run folder as argument.
 ```
-snakemake --profile cluster --config input=<path to your run folder>
+snakemake --profile cluster --config run_dir=<path to your run folder>
 ```
 This command will launch the pipeline by submitting the appropriate jobs for cluster execution.
 You can monitor the progress of the pipeline in the console output.
@@ -52,7 +52,7 @@ You can monitor the progress of the pipeline in the console output.
 If running locally (which necessitate a strong GPU, unless using faster models), also start by activating the conda environment. Then launch the pipeline with:
 
 ```
-snakemake --config input=<path to your run folder> --cores <number of cores you want to use>
+snakemake --config run_dir=<path to your run folder> --cores <number of cores you want to use>
 ```
 
 ### Output
