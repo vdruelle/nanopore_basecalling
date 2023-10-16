@@ -1,5 +1,7 @@
 # nanopore_basecalling
 
+[![built with Codeium](https://codeium.com/badges/main)](https://codeium.com)
+
 ## Introduction
 This pipeline is used to basecall raw data generated from a nanopore sequencing run (pod5). It performs the following steps:
 
