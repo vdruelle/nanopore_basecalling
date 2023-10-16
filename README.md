@@ -46,7 +46,7 @@ Your run folder must contain a subfolder named `raw` in which all your `.pod5` a
 snakemake --profile cluster --config run_dir=<path to your run folder>
 ```
 This command will launch the pipeline by submitting the appropriate jobs for cluster execution.
-You can monitor the progress of the pipeline in the console output.
+You can monitor the progress of the pipeline in the console output. For a good nanopore run (20Gbp), the pipeline should take around 1h30 to complete.
 
 #### Local execution
 If running locally (which necessitate a strong GPU, unless using faster models), also start by activating the conda environment. Then launch the pipeline with:
