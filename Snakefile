@@ -58,7 +58,7 @@ rule generate_log_file:
         {params.flow_cell} \
         {params.kit} \
         {params.ex_time}
-        cat test_data/params.tsv >> {output}
+        cat {DATA_DIR}/params.tsv >> {output}
         """
 
 

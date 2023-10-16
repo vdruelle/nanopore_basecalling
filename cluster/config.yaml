@@ -4,7 +4,7 @@ jobscript: "cluster/slurm_submit.sh"
 cluster-config: "cluster/cluster_config.json"
 cluster-cancel: scancel
 jobname: "{rulename}_{jobid}"
-latency-wait: 60
+latency-wait: 90
 
 use-conda: True
 rerun-incomplete: True
