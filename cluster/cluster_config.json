@@ -20,20 +20,6 @@
         "cpus": 4,
         "extra": ""
     },
-    "compress": {
-        "time": "00:29:00",
-        "qos": "30min",
-        "mem": "16G",
-        "cpus": 1,
-        "extra": ""
-    },
-    "stats": {
-        "time": "00:29:00",
-        "qos": "30min",
-        "mem": "16G",
-        "cpus": 1,
-        "extra": ""
-    },
     "combine_stats": {
         "time": "00:29:00",
         "qos": "30min",

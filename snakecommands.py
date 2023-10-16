@@ -53,14 +53,10 @@ Parameter file:
 def generate_stats(reads, output):
     from Bio import SeqIO
 
-    # extract the records
-    with open(reads, 'r') as f:
-        records = list(SeqIO.parse(f, 'fastq'))
-    
-    lengths = [str(len(record)) + "\n" for record in records]
-    
-    with open(output, "w") as file:
-        file.write("".join(lengths))
+    with open(reads, 'r') as f, open(output, 'w') as file:
+        for record in SeqIO.parse(f, 'fastq'):
+            length = str(len(record)) + "\n"
+            file.write(length)
 
 
 @cli.command()
