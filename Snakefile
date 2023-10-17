@@ -208,6 +208,7 @@ rule clean_all:
         rm -rf {TMP_DIR}
         rm -rf log
         rm -f {OUTPUT_DIR}/basecalling.log
+        rm -f {rules.clean.output}
         """
 
 

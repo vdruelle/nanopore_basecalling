@@ -14,8 +14,8 @@
         "extra": "--partition=a100 --nodes=1 --gres=gpu:4"
     },
     "demultiplex": {
-        "time": "05:55:00",
-        "qos": "6hours",
+        "time": "00:30:00",
+        "qos": "30min",
         "mem": "16G",
         "cpus": 4,
         "extra": ""
