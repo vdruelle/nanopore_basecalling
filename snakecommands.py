@@ -36,7 +36,7 @@ Dorado model: {dorado_model}
 Flow cell: {flow_cell}
 Nanopore kit: {nanopore_kit}
 Input dir: {data_dir / "raw"}
-Output dir: {data_dir / "basecalled"}
+Output dir: {data_dir / "final"}
 
 Parameter file:
 
