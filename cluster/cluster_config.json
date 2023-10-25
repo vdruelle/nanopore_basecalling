@@ -8,9 +8,9 @@
     },
     "basecall": {
         "time": "05:55:00",
-        "qos": "6hours",
-        "mem": "300G",
-        "cpus": 128,
+        "qos": "gpu6hours",
+        "mem": "100G",
+        "cpus": 32,
         "extra": "--partition=a100 --nodes=1 --gres=gpu:4"
     },
     "demultiplex": {
@@ -21,6 +21,13 @@
         "extra": ""
     },
     "combine_stats": {
+        "time": "00:29:00",
+        "qos": "30min",
+        "mem": "16G",
+        "cpus": 1,
+        "extra": ""
+    },
+    "make_plots": {
         "time": "00:29:00",
         "qos": "30min",
         "mem": "16G",
