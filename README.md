@@ -14,6 +14,7 @@ This pipeline is used to basecall raw data generated from a nanopore sequencing 
 - Generate plots from the combined statistics file.
 - Clean up the temporary files created along the way to avoid unecessary storage use.
 
+The accuracy of de novo assemblies using nanopore only (with the same basecalling as in this pipeline) has been tested here (sup model): https://rrwick.github.io/2023/10/24/ont-only-accuracy-update.html 
 
 ## How to run
 
