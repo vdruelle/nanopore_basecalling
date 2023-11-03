@@ -162,14 +162,14 @@ def make_plots_quality(stats_file_mean, stats_file_std):
     output_dir = os.path.split(stats_file_mean)[:-1][0]
 
     plt.figure()
-    sns.violinplot(data=df_mean, orient="v", log_scale=True)
+    sns.violinplot(data=df_mean, orient="v")
     plt.ylabel("Mean quality")
     plt.xticks(rotation=80)
     plt.tight_layout()
     plt.savefig(f"{output_dir}/quality_mean.png", facecolor="w", dpi=200)
 
     plt.figure()
-    sns.violinplot(data=df_mean, orient="v", log_scale=True)
+    sns.violinplot(data=df_std, orient="v")
     plt.ylabel("Std of quality")
     plt.xticks(rotation=80)
     plt.tight_layout()
