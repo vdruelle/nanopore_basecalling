@@ -27,7 +27,14 @@
         "cpus": 1,
         "extra": ""
     },
-    "make_plots": {
+    "make_plots_lengths": {
+        "time": "00:29:00",
+        "qos": "30min",
+        "mem": "16G",
+        "cpus": 1,
+        "extra": ""
+    },
+    "make_plots_quality": {
         "time": "00:29:00",
         "qos": "30min",
         "mem": "16G",
