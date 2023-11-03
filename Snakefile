@@ -159,20 +159,22 @@ rule combine_stats:
         stat_files=expand(TMP_DIR + "/stats/barcode_{barcode}.tsv", barcode=BARCODES),
         stat_file_unclassified=TMP_DIR + "/stats/unclassified.tsv",
     output:
-        output_file=STATISTICS_DIR + "/statistics.tsv",
+        output_lengths=STATISTICS_DIR + "/lengths.tsv",
+        output_quality_mean=STATISTICS_DIR + "/quality.tsv",
+        output_quality_std=STATISTICS_DIR + "/quality_std.tsv",
     conda:
         "conda_envs/nanopore_basecalling.yml"
     shell:
         """
-        python snakecommands.py combine-stats {TMP_DIR}/stats {output}
+        python snakecommands.py combine-stats {TMP_DIR}/stats {output.output_lengths} {output.output_quality_mean} {output.output_quality_std}
         """
 
 
-rule make_plots:
+rule make_plots_lengths:
     message:
-        "Generating plots from {input.stats_file}."
+        "Generating lenghts statistics plots."
     input:
-        stats_file=rules.combine_stats.output.output_file,
+        stats_file_lengths=rules.combine_stats.output.output_lengths,
     output:
         len_hist=STATISTICS_DIR + "/len_hist.png",
         bp_per_barcode=STATISTICS_DIR + "/bp_per_barcode.png",
@@ -180,7 +182,24 @@ rule make_plots:
         "conda_envs/nanopore_basecalling.yml"
     shell:
         """
-        python snakecommands.py make-plots {input.stats_file}
+        python snakecommands.py make-plots-lengths {input.stats_file_lengths}
+        """
+
+
+rule make_plots_quality:
+    message:
+        "Generating quality statistics plots."
+    input:
+        stats_file_quality_mean=rules.combine_stats.output.output_quality_mean,
+        stats_file_quality_std=rules.combine_stats.output.output_quality_std,
+    output:
+        quality_mean_plot=STATISTICS_DIR + "/quality_mean.png",
+        quality_std_plot=STATISTICS_DIR + "/quality_std.png",
+    conda:
+        "conda_envs/nanopore_basecalling.yml"
+    shell:
+        """
+        python snakecommands.py make-plots-quality {input.stats_file_quality_mean} {input.stats_file_quality_std}
         """
 
 
@@ -188,7 +207,9 @@ rule clean:
     message:
         "Cleaning up the output folder."
     input:
-        rules.make_plots.output.len_hist,
+        rules.make_plots_lengths.output.len_hist,
+        rules.make_plots_quality.output.quality_mean_plot,
+        rules.make_plots_quality.output.quality_std_plot,
     output:
         DATA_DIR + "/.cleaned_dummy_file.txt",
     shell:

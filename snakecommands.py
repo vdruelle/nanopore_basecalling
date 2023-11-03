@@ -51,25 +51,38 @@ Parameter file:
 @click.argument("reads", type=click.Path(exists=True))
 @click.argument("output", type=click.Path())
 def generate_stats(reads, output):
+    """
+    Generate a stats file in .tsv format for a fastq file. 
+    It contains the length, mean quality and standard deviation of the quality.
+    """
+    import numpy as np
     from Bio import SeqIO
 
     with open(reads, 'r') as f, open(output, 'w') as file:
+        file.write("length\tmean_quality\tstd_quality\n")
         for record in SeqIO.parse(f, 'fastq'):
-            length = str(len(record)) + "\n"
-            file.write(length)
+            length = len(record)
+            mean_quality = np.mean(record.letter_annotations['phred_quality'])
+            std_quality = np.std(record.letter_annotations['phred_quality'])
+            tmp_string = str(length) + "\t" + str(mean_quality) + "\t" + str(std_quality) + "\n"
+            file.write(tmp_string)
 
 
 @cli.command()
 @click.argument("stats_dir", type=click.Path(exists=True))
-@click.argument("output", type=click.Path())
-def combine_stats(stats_dir, output):
-    "Load reads all csv files in the stats_dir and combine them into a single csv file"
+@click.argument("output_lengths", type=click.Path())
+@click.argument("output_quality_mean", type=click.Path())
+@click.argument("output_quality_std", type=click.Path())
+def combine_stats(stats_dir, output_lengths, output_quality_mean, output_quality_std):
+    "Load reads all csv files in the stats_dir and combine them into .tsv files (one for lengths, one for mean quality and one for std quality)."
     import os
 
     import pandas as pd
     
     file_list = [file for file in os.listdir(stats_dir) if file.endswith(".tsv")]
-    combined_df = pd.DataFrame()
+    df_lengths = pd.DataFrame()
+    df_quality_mean = pd.DataFrame()
+    df_quality_std = pd.DataFrame()
 
     # Iterate over each CSV file
     for file_name in file_list:
@@ -77,19 +90,32 @@ def combine_stats(stats_dir, output):
         header = os.path.splitext(file_name)[0]
 
         # Read the CSV file into a DataFrame
-        df = pd.read_csv(file_path, names=[header])
+        df = pd.read_table(file_path)
 
         # Assign the DataFrame to the column with the header as the column label
-        combined_df = pd.concat([combined_df,df], axis=1)
+        df_lengths = pd.concat([df_lengths,df["length"]], axis=1)
+        df_lengths = df_lengths.rename(columns={"length": header})
+
+        df_quality_mean = pd.concat([df_quality_mean,df["mean_quality"]], axis=1)
+        df_quality_mean = df_quality_mean.rename(columns={"mean_quality": header})
+
+        df_quality_std = pd.concat([df_quality_std,df["std_quality"]], axis=1)
+        df_quality_std = df_quality_std.rename(columns={"std_quality": header})
 
     sorted_headers = [f"barcode_{str(ii).zfill(2)}" for ii in range(1, 25)]
     sorted_headers += ["unclassified"]
-    combined_df = combined_df[sorted_headers]
-    combined_df.to_csv(output, index=False, sep="\t")
+    df_lengths = df_lengths[sorted_headers]
+    df_quality_mean = df_quality_mean[sorted_headers]
+    df_quality_std = df_quality_std[sorted_headers]
+
+    df_lengths.to_csv(output_lengths, index=False, sep="\t")
+    df_quality_mean.to_csv(output_quality_mean, index=False, sep="\t")
+    df_quality_std.to_csv(output_quality_std, index=False, sep="\t")
 
 @cli.command()
 @click.argument("stats_file", type=click.Path(exists=True))
-def make_plots(stats_file):
+def make_plots_lengths(stats_file):
+    "Generates the length statistics plots."
     import os
 
     import matplotlib.pyplot as plt
@@ -110,7 +136,7 @@ def make_plots(stats_file):
 
     sum_values = df.sum() / 1e6
 
-    # Create the plot using seaborn
+    # Bar plot of the total number of bp per barcode
     plt.figure()
     sns.barplot(x=sum_values.index, y=sum_values.values)  # Create the bar plot
     plt.xlabel("Barcode")  # Set the x-axis label
@@ -120,6 +146,34 @@ def make_plots(stats_file):
     plt.tight_layout()
     plt.savefig(f"{output}/bp_per_barcode.png", facecolor="w", dpi=200)
 
+@cli.command()
+@click.argument("stats_file_mean", type=click.Path(exists=True))
+@click.argument("stats_file_std", type=click.Path(exists=True))
+def make_plots_quality(stats_file_mean, stats_file_std):
+    "Generates the quality statistics plots."
+    import os
+
+    import matplotlib.pyplot as plt
+    import pandas as pd
+    import seaborn as sns
+
+    df_mean = pd.read_csv(stats_file_mean, sep="\t")
+    df_std = pd.read_csv(stats_file_std, sep="\t")
+    output_dir = os.path.split(stats_file_mean)[:-1][0]
+
+    plt.figure()
+    sns.violinplot(data=df_mean, orient="v", log_scale=True)
+    plt.ylabel("Mean quality")
+    plt.xticks(rotation=80)
+    plt.tight_layout()
+    plt.savefig(f"{output_dir}/quality_mean.png", facecolor="w", dpi=200)
+
+    plt.figure()
+    sns.violinplot(data=df_mean, orient="v", log_scale=True)
+    plt.ylabel("Std of quality")
+    plt.xticks(rotation=80)
+    plt.tight_layout()
+    plt.savefig(f"{output_dir}/quality_std.png", facecolor="w", dpi=200)
 
 if __name__ == "__main__":
     cli()
