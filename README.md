@@ -14,7 +14,7 @@ This pipeline is used to basecall raw data generated from a nanopore sequencing 
 - Generate plots from the combined statistics file.
 - Clean up the temporary files created along the way to avoid unecessary storage use.
 
-The accuracy of de novo assemblies using nanopore only (with the same basecalling as in this pipeline) has been tested here (sup model): https://rrwick.github.io/2023/10/24/ont-only-accuracy-update.html 
+The accuracy of de novo assemblies using nanopore only (with the same basecalling as in this pipeline) has been tested here (sup model): https://rrwick.github.io/2023/12/18/ont-only-accuracy-update.html
 
 ## How to run
 
@@ -24,11 +24,11 @@ Start by cloning this repo (on the cluster, if aiming for cluster execution):
 git clone https://github.com/vdruelle/nanopore_basecalling.git
 ```
 
-Once this is done, you need to download dorado (https://github.com/nanoporetech/dorado, linux-x64 in our case), unpack it and move the folder called `dorado-0.4.1-linux-x64` to the directory `softwares/`.
+Once this is done, you need to download dorado (https://github.com/nanoporetech/dorado, linux-x64 in our case), unpack it and move the folder called `dorado-0.5.0-linux-x64` to the directory `softwares/`.
 
 You can then download the appropriate dorado model into the directory `softwares/doarado_models` by typing:
 ```
-./dorado-0.4.1-linux-x64/bin/dorado download --model dna_r10.4.1_e8.2_400bps_sup@v4.2.0 --directory sofwares/dorado_models
+./dorado-0.5.0-linux-x64/bin/dorado download --model dna_r10.4.1_e8.2_400bps_sup@v4.3.0 --directory sofwares/dorado_models
 ```
 
 Last you need to create the conda environment for the pipeline:
