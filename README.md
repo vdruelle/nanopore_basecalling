@@ -6,7 +6,7 @@
 This pipeline is used to basecall raw data generated from a nanopore sequencing run (pod5). It performs the following steps:
 
 - Generate a log file with information about the basecalling process.
-- Basecall the reads using Dorado.
+- Basecall the reads using Dorado. Does this for the 24 barcoding kit by default, can do 96 with additional option.
 - Split the reads based on detected barcodes and trim the barcodes from the reads (Dorado default behaviour).
 - Convert the barcoded reads to FASTQ format.
 - Generate statistics for the barcoded reads.
@@ -48,7 +48,11 @@ Your run folder must contain a subfolder named `raw` in which all your `.pod5` a
 ```
 snakemake --profile cluster --config run_dir=<path to your run folder>
 ```
-This command will launch the pipeline by submitting the appropriate jobs for cluster execution.
+This command will launch the pipeline by submitting the appropriate jobs for cluster execution to basecall an split the 24 barcodes.
+If you want to perform basecalling for 96 barcodes instead do the following instead:
+```
+snakemake --profile cluster --config run_dir=<path to your run folder> kit96=True
+```
 You can monitor the progress of the pipeline in the console output. For a good nanopore run (20Gbp), the pipeline should take around 1h30 to complete.
 
 #### Local execution
