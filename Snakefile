@@ -13,11 +13,21 @@ STATISTICS_DIR = DATA_DIR + "/statistics"
 EXEC_TIME = time.strftime("%Y-%m-%d_%H:%M:%S", time.localtime())
 LOGFILE = DATA_DIR + "/basecalling.log"
 
-BARCODES = [str(ii).zfill(2) for ii in range(1, 25)]
 DORADO_BIN = "softwares/dorado-0.5.0-linux-x64/bin/dorado"
 DORADO_MODEL = "softwares/dorado_models/dna_r10.4.1_e8.2_400bps_sup@v4.3.0"
-NANOPORE_KIT = "SQK-RBK114-24"
+
+# argument to define whether it was a 96 barcode run or not. Omitting this argument will default to 24 barcodes run
+if "kit96" in config.keys():
+    if config["kit96"] == True:  # if the argument is present and set to true
+        NB_BARCODES = 96
+    else:
+        NB_BARCODES = 24  # if the argument is present and set to false
+else:
+    NB_BARCODES = 24  # if the argument is not present
+
+NANOPORE_KIT = "SQK-RBK114-" + str(NB_BARCODES)
 FLOW_CELL = "FLO-MIN114"
+BARCODES = [str(ii).zfill(2) for ii in range(1, NB_BARCODES + 1)]
 
 # create log directory if it does not exists
 pathlib.Path("log").mkdir(exist_ok=True)
@@ -36,6 +46,8 @@ rule all:
         unclassified=OUTPUT_DIR + "/unclassified.fastq.gz",
         plot1=STATISTICS_DIR + "/len_hist.png",
         plot2=STATISTICS_DIR + "/bp_per_barcode.png",
+        plot3=STATISTICS_DIR + "/quality_mean.png",
+        plot4=STATISTICS_DIR + "/quality_std.png",
         clean=DATA_DIR + "/.cleaned_dummy_file.txt",  # comment for debugging
 
 
@@ -64,7 +76,7 @@ rule generate_log_file:
 
 rule basecall:
     message:
-        "Basecalling the reads using Dorado model {params.model}."
+        "Basecalling the reads using Dorado model {params.model} for the kit {params.kit}."
     input:
         input_dir=INPUT_DIR,
         logfile=LOGFILE,
@@ -90,35 +102,25 @@ rule demultiplex:
         rules.basecall.output.file,
     output:
         directory=directory(TMP_DIR + "/barcoded"),
-        barcodes=expand(TMP_DIR + "/barcoded/barcode_{barcode}.bam", barcode=BARCODES),
-        unclassified=TMP_DIR + "/barcoded/unclassified.bam",
+        barcodes=expand(TMP_DIR + "/barcoded/barcode_{barcode}.fastq", barcode=BARCODES),
+        unclassified=TMP_DIR + "/barcoded/unclassified.fastq",
     conda:
         "conda_envs/nanopore_basecalling.yml"
     params:
         dorado=DORADO_BIN,
+        kit=NANOPORE_KIT,
     threads: 4
     shell:
         """
         mkdir -p {output.directory}
-        {params.dorado} demux --output-dir {output.directory} --no-classify {input} -t {threads}
+        {params.dorado} demux --output-dir {output.directory} --no-classify {input} -t {threads} --emit-fastq
         cd {output.directory}
-        for file in SQK-RBK114-24_barcode*.bam; do mv "$file" "${{file/SQK-RBK114-24_barcode/barcode_}}"; done
-        """
-
-
-rule bam_to_fastq:
-    message:
-        "Converting the barcoded reads to fastq."
-    input:
-        barcodes=TMP_DIR + "/barcoded/{filename}.bam",
-        unclassified=rules.demultiplex.output.unclassified,
-    output:
-        barcodes=TMP_DIR + "/fastq/{filename}.fastq",
-    conda:
-        "conda_envs/nanopore_basecalling.yml"
-    shell:
-        """
-        samtools fastq {input.barcodes} > {output.barcodes}
+        for file in {params.kit}_barcode*.fastq; do mv "$file" "${{file/{params.kit}_barcode/barcode_}}"; done
+        for bc in {BARCODES}; do
+            if ! [[ -e barcode_$bc.fastq ]]; then
+                touch barcode_$bc.fastq
+            fi
+        done
         """
 
 
@@ -126,7 +128,7 @@ rule compress:
     message:
         "Generating the final compressed file {output.output_file}."
     input:
-        input_file=TMP_DIR + "/fastq/{filename}.fastq",
+        input_file=TMP_DIR + "/barcoded/{filename}.fastq",
     output:
         output_file=OUTPUT_DIR + "/{filename}.fastq.gz",
     conda:
@@ -141,7 +143,7 @@ rule stats:
     message:
         "Generating stats for {input.input_file}."
     input:
-        input_file=TMP_DIR + "/fastq/{filename}.fastq",
+        input_file=TMP_DIR + "/barcoded/{filename}.fastq",
     output:
         output_file=TMP_DIR + "/stats/{filename}.tsv",
     conda:
@@ -162,11 +164,13 @@ rule combine_stats:
         output_lengths=STATISTICS_DIR + "/lengths.tsv",
         output_quality_mean=STATISTICS_DIR + "/quality.tsv",
         output_quality_std=STATISTICS_DIR + "/quality_std.tsv",
+    params:
+        nb_barcodes=NB_BARCODES,
     conda:
         "conda_envs/nanopore_basecalling.yml"
     shell:
         """
-        python snakecommands.py combine-stats {TMP_DIR}/stats {output.output_lengths} {output.output_quality_mean} {output.output_quality_std}
+        python snakecommands.py combine-stats {TMP_DIR}/stats {output.output_lengths} {output.output_quality_mean} {output.output_quality_std} {params.nb_barcodes}
         """
 
 

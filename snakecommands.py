@@ -73,8 +73,9 @@ def generate_stats(reads, output):
 @click.argument("output_lengths", type=click.Path())
 @click.argument("output_quality_mean", type=click.Path())
 @click.argument("output_quality_std", type=click.Path())
-def combine_stats(stats_dir, output_lengths, output_quality_mean, output_quality_std):
-    "Load reads all csv files in the stats_dir and combine them into .tsv files (one for lengths, one for mean quality and one for std quality)."
+@click.argument("nb_barcodes", type=int)
+def combine_stats(stats_dir, output_lengths, output_quality_mean, output_quality_std, nb_barcodes):
+    "Reads all csv files in the stats_dir and combine them into .tsv files (one for lengths, one for mean quality and one for std quality)."
     import os
 
     import pandas as pd
@@ -102,7 +103,7 @@ def combine_stats(stats_dir, output_lengths, output_quality_mean, output_quality
         df_quality_std = pd.concat([df_quality_std,df["std_quality"]], axis=1)
         df_quality_std = df_quality_std.rename(columns={"std_quality": header})
 
-    sorted_headers = [f"barcode_{str(ii).zfill(2)}" for ii in range(1, 25)]
+    sorted_headers = [f"barcode_{str(ii).zfill(2)}" for ii in range(1, nb_barcodes+1)]
     sorted_headers += ["unclassified"]
     df_lengths = df_lengths[sorted_headers]
     df_quality_mean = df_quality_mean[sorted_headers]
@@ -126,23 +127,25 @@ def make_plots_lengths(stats_file):
     output = os.path.split(stats_file)[:-1][0]
 
     # log-length distribution by barcode, normalized
-    plt.figure()
+    plt.figure(figsize=(12,8))
     sns.violinplot(data=df, orient="v", log_scale=True)
     plt.yscale("log")
     plt.ylabel("Length of reads")
-    plt.xticks(rotation=80)
+    plt.xlabel("Barcode")  # Set the x-axis label
+    plt.xticks(range(len(df.columns)), [f"{ii:02d}" for ii in range(len(df.columns))], rotation=80, fontsize="small")
     plt.tight_layout()
     plt.savefig(f"{output}/len_hist.png", facecolor="w", dpi=200)
+
 
     sum_values = df.sum() / 1e6
 
     # Bar plot of the total number of bp per barcode
-    plt.figure()
+    plt.figure(figsize=(12,8))
     sns.barplot(x=sum_values.index, y=sum_values.values)  # Create the bar plot
     plt.xlabel("Barcode")  # Set the x-axis label
     plt.ylabel("MBp")  # Set the y-axis label
     plt.title("Number of Basepairs for Each Barcode")  # Set the title of the plot
-    plt.xticks(rotation=80)  # Rotate the x-axis labels if needed
+    plt.xticks(range(len(df.columns)), [f"{ii:02d}" for ii in range(len(df.columns))], rotation=80, fontsize="small")
     plt.tight_layout()
     plt.savefig(f"{output}/bp_per_barcode.png", facecolor="w", dpi=200)
 
@@ -161,17 +164,19 @@ def make_plots_quality(stats_file_mean, stats_file_std):
     df_std = pd.read_csv(stats_file_std, sep="\t")
     output_dir = os.path.split(stats_file_mean)[:-1][0]
 
-    plt.figure()
+    plt.figure(figsize=(12,8))
     sns.violinplot(data=df_mean, orient="v")
     plt.ylabel("Mean quality")
-    plt.xticks(rotation=80)
+    plt.xticks(range(len(df_mean.columns)), [f"{ii:02d}" for ii in range(len(df_mean.columns))], rotation=80, fontsize="small")
+    plt.xlabel("Barcode")  # Set the x-axis label
     plt.tight_layout()
     plt.savefig(f"{output_dir}/quality_mean.png", facecolor="w", dpi=200)
 
-    plt.figure()
+    plt.figure(figsize=(12,8))
     sns.violinplot(data=df_std, orient="v")
     plt.ylabel("Std of quality")
-    plt.xticks(rotation=80)
+    plt.xticks(range(len(df_mean.columns)), [f"{ii:02d}" for ii in range(len(df_mean.columns))], rotation=80, fontsize="small")
+    plt.xlabel("Barcode")  # Set the x-axis label
     plt.tight_layout()
     plt.savefig(f"{output_dir}/quality_std.png", facecolor="w", dpi=200)
 
