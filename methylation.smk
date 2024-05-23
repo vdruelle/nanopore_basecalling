@@ -16,6 +16,9 @@ LOGFILE = DATA_DIR + "/basecalling.log"
 DORADO_BIN = "softwares/dorado-0.7.0-linux-x64/bin/dorado"
 DORADO_MODEL = "softwares/dorado_models/dna_r10.4.1_e8.2_400bps_sup@v5.0.0"
 
+# Choose the modification model here
+DORADO_MODS = "softwares/dorado_models/dna_r10.4.1_e8.2_400bps_sup@v5.0.0_6mA@v1"
+
 # argument to define whether it was a 96 barcode run or not. Omitting this argument will default to 24 barcodes run
 if "kit96" in config.keys():
     if config["kit96"] == True:  # if the argument is present and set to true
@@ -42,8 +45,8 @@ localrules:
 
 rule all:
     input:
-        barcodes=expand(OUTPUT_DIR + "/barcode_{barcode}.fastq.gz", barcode=BARCODES),
-        unclassified=OUTPUT_DIR + "/unclassified.fastq.gz",
+        barcodes=expand(OUTPUT_DIR + "/fastq_files/barcode_{barcode}.fastq.gz", barcode=BARCODES),
+        unclassified=OUTPUT_DIR + "/fastq_files/unclassified.fastq.gz",
         plot1=STATISTICS_DIR + "/len_hist.png",
         plot2=STATISTICS_DIR + "/bp_per_barcode.png",
         plot3=STATISTICS_DIR + "/quality_mean.png",
@@ -88,10 +91,11 @@ rule basecall:
     params:
         kit=NANOPORE_KIT,
         model=DORADO_MODEL,
+        mods=DORADO_MODS,
         dorado=DORADO_BIN,
     shell:
         """
-        {params.dorado} basecaller {params.model} {input.input_dir} --kit-name {params.kit} > {output.file}
+        {params.dorado} basecaller {params.model} {input.input_dir} --modified-bases-models {params.mods} --kit-name {params.kit} > {output.file}
         """
 
 
@@ -101,9 +105,9 @@ rule demultiplex:
     input:
         rules.basecall.output.file,
     output:
-        directory=directory(TMP_DIR + "/barcoded"),
-        barcodes=expand(TMP_DIR + "/barcoded/barcode_{barcode}.fastq", barcode=BARCODES),
-        unclassified=TMP_DIR + "/barcoded/unclassified.fastq",
+        directory=directory(OUTPUT_DIR + "/bam_files"),
+        barcodes=expand(OUTPUT_DIR + "/bam_files/barcode_{barcode}.bam", barcode=BARCODES),
+        unclassified=OUTPUT_DIR + "/bam_files/unclassified.bam",
     conda:
         "conda_envs/nanopore_basecalling.yml"
     params:
@@ -113,14 +117,29 @@ rule demultiplex:
     shell:
         """
         mkdir -p {output.directory}
-        {params.dorado} demux --output-dir {output.directory} --no-classify {input} -t {threads} --emit-fastq
+        {params.dorado} demux --output-dir {output.directory} --no-classify {input} -t {threads}
         cd {output.directory}
-        for file in {params.kit}_barcode*.fastq; do mv "$file" "${{file/{params.kit}_barcode/barcode_}}"; done
+        for file in {params.kit}_barcode*.bam; do mv "$file" "${{file/{params.kit}_barcode/barcode_}}"; done
         for bc in {BARCODES}; do
-            if ! [[ -e barcode_$bc.fastq ]]; then
-                touch barcode_$bc.fastq
+            if ! [[ -e barcode_$bc.bam ]]; then
+                touch barcode_$bc.bam
             fi
         done
+        """
+
+
+rule convert:
+    message:
+        "Converting the file {input.bam} file to .fastq format."
+    input:
+        bam=OUTPUT_DIR + "/bam_files/{filename}.bam",
+    output:
+        fastq=TMP_DIR + "/barcoded/{filename}.fastq",
+    conda:
+        "conda_envs/nanopore_basecalling.yml"
+    shell:
+        """
+        samtools bam2fq {input.bam} > {output.fastq}
         """
 
 
@@ -130,7 +149,7 @@ rule compress:
     input:
         input_file=TMP_DIR + "/barcoded/{filename}.fastq",
     output:
-        output_file=OUTPUT_DIR + "/{filename}.fastq.gz",
+        output_file=OUTPUT_DIR + "/fastq_files/{filename}.fastq.gz",
     conda:
         "conda_envs/nanopore_basecalling.yml"
     shell:
@@ -235,3 +254,34 @@ rule clean_all:
         rm -f {OUTPUT_DIR}/basecalling.log
         rm -f {rules.clean.output}
         """
+
+
+# download and extract dorado binaries. The URL is in the config file.
+# rule download_dorado_bin:
+#     output:
+#         "softwares/dorado"
+#     params:
+#         url=config["dorado_url"]
+#     shell:
+#         """
+#         mkdir -p softwares
+#         wget {params.url} --directory softwares
+#         BN=$(basename {params.url} .tar.gz)
+#         FN=softwares/$BN.tar.gz
+#         ln -s $BN/bin/dorado softwares/dorado
+#         tar -xf $FN -C softwares --overwrite
+#         rm $FN
+#         """
+# # download desired dorado model, as per config file specification
+# rule download_dorado_model:
+#     input:
+#         drd=rules.download_dorado_bin.output
+#     output:
+#         f"softwares/dorado_models/{config['dorado_model']}"
+#     params:
+#         mdl=config["dorado_model"]
+#     shell:
+#         """
+#         mkdir -p software/dorado_models
+#         {input.drd} download --model {params.mdl} --directory {output}
+#         """

@@ -132,7 +132,7 @@ def make_plots_lengths(stats_file):
     plt.yscale("log")
     plt.ylabel("Length of reads")
     plt.xlabel("Barcode")  # Set the x-axis label
-    plt.xticks(range(len(df.columns)), [f"{ii:02d}" for ii in range(len(df.columns))], rotation=80, fontsize="small")
+    plt.xticks(range(len(df.columns)), [f"{ii:02d}" for ii in range(1, len(df.columns))]+["unclassified"], rotation=80, fontsize="small")
     plt.tight_layout()
     plt.savefig(f"{output}/len_hist.png", facecolor="w", dpi=200)
 
@@ -145,7 +145,7 @@ def make_plots_lengths(stats_file):
     plt.xlabel("Barcode")  # Set the x-axis label
     plt.ylabel("MBp")  # Set the y-axis label
     plt.title("Number of Basepairs for Each Barcode")  # Set the title of the plot
-    plt.xticks(range(len(df.columns)), [f"{ii:02d}" for ii in range(len(df.columns))], rotation=80, fontsize="small")
+    plt.xticks(range(len(df.columns)), [f"{ii:02d}" for ii in range(1, len(df.columns))]+["unclassified"], rotation=80, fontsize="small")
     plt.tight_layout()
     plt.savefig(f"{output}/bp_per_barcode.png", facecolor="w", dpi=200)
 
@@ -167,7 +167,7 @@ def make_plots_quality(stats_file_mean, stats_file_std):
     plt.figure(figsize=(12,8))
     sns.violinplot(data=df_mean, orient="v")
     plt.ylabel("Mean quality")
-    plt.xticks(range(len(df_mean.columns)), [f"{ii:02d}" for ii in range(len(df_mean.columns))], rotation=80, fontsize="small")
+    plt.xticks(range(len(df_mean.columns)), [f"{ii:02d}" for ii in range(1, len(df_mean.columns))]+["unclassified"], rotation=80, fontsize="small")
     plt.xlabel("Barcode")  # Set the x-axis label
     plt.tight_layout()
     plt.savefig(f"{output_dir}/quality_mean.png", facecolor="w", dpi=200)
@@ -175,7 +175,7 @@ def make_plots_quality(stats_file_mean, stats_file_std):
     plt.figure(figsize=(12,8))
     sns.violinplot(data=df_std, orient="v")
     plt.ylabel("Std of quality")
-    plt.xticks(range(len(df_mean.columns)), [f"{ii:02d}" for ii in range(len(df_mean.columns))], rotation=80, fontsize="small")
+    plt.xticks(range(len(df_mean.columns)), [f"{ii:02d}" for ii in range(1, len(df_mean.columns))]+["unclassified"], rotation=80, fontsize="small")
     plt.xlabel("Barcode")  # Set the x-axis label
     plt.tight_layout()
     plt.savefig(f"{output_dir}/quality_std.png", facecolor="w", dpi=200)
