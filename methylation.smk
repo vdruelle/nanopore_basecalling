@@ -254,34 +254,3 @@ rule clean_all:
         rm -f {OUTPUT_DIR}/basecalling.log
         rm -f {rules.clean.output}
         """
-
-
-# download and extract dorado binaries. The URL is in the config file.
-# rule download_dorado_bin:
-#     output:
-#         "softwares/dorado"
-#     params:
-#         url=config["dorado_url"]
-#     shell:
-#         """
-#         mkdir -p softwares
-#         wget {params.url} --directory softwares
-#         BN=$(basename {params.url} .tar.gz)
-#         FN=softwares/$BN.tar.gz
-#         ln -s $BN/bin/dorado softwares/dorado
-#         tar -xf $FN -C softwares --overwrite
-#         rm $FN
-#         """
-# # download desired dorado model, as per config file specification
-# rule download_dorado_model:
-#     input:
-#         drd=rules.download_dorado_bin.output
-#     output:
-#         f"softwares/dorado_models/{config['dorado_model']}"
-#     params:
-#         mdl=config["dorado_model"]
-#     shell:
-#         """
-#         mkdir -p software/dorado_models
-#         {input.drd} download --model {params.mdl} --directory {output}
-#         """
