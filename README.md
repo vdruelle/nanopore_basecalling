@@ -24,11 +24,11 @@ Start by cloning this repo (on the cluster, if aiming for cluster execution):
 git clone https://github.com/vdruelle/nanopore_basecalling.git
 ```
 
-Once this is done, you need to download dorado (https://github.com/nanoporetech/dorado, linux-x64 in our case), unpack it and move the folder called `dorado-0.5.0-linux-x64` to the directory `softwares/`.
+Once this is done, you need to download dorado (https://github.com/nanoporetech/dorado, linux-x64 in our case), unpack it and move the folder called `dorado-0.7.0-linux-x64` to the directory `softwares/`.
 
 You can then download the appropriate dorado model into the directory `softwares/doarado_models` by typing:
 ```
-./softwares/dorado-0.5.0-linux-x64/bin/dorado download --model dna_r10.4.1_e8.2_400bps_sup@v4.3.0 --directory softwares/dorado_models
+./softwares/dorado-0.5.0-linux-x64/bin/dorado download --model dna_r10.4.1_e8.2_400bps_sup@v5.0.0 --directory softwares/dorado_models
 ```
 
 Last you need to create the conda environment for the pipeline:
@@ -69,3 +69,15 @@ Once the pipeline completes, should have more files and directories in your run 
 - A log file `basecalling.log`. This file describe when and with which parameter the basecalling happened.
 
 The pipeline will also generate many intermediate outputs while it runs. They are automatically removed at the end.
+
+## Modified basecalling
+This pipeline can be used to perform modified basecalling of nanopore reads. This is done by using the modified base models of dorado, which are implemented in the `methylation.smk` file.
+
+The models available are shown on the Dorado github page: https://github.com/nanoporetech/dorado.
+The appropriate model needs to be downloaded and put in the `softwares/doarado_models` first.
+
+To perform methylation basecalling, modify the `methylation.smk` file so that the argument `DORADO_MODS` corresponds to the modified basecalling you want to perform (by default it is 6mA). Once this is done the pipeline can be run on the cluster by using:
+
+```
+snakemake -s methylation.smk --profile cluster --config run_dir=<path to your run folder>
+```
