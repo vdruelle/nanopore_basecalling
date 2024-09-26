@@ -14,7 +14,7 @@ STATISTICS_DIR = os.path.join(DATA_DIR, "statistics")
 EXEC_TIME = time.strftime("%Y-%m-%d_%H:%M:%S", time.localtime())
 LOGFILE = os.path.join(DATA_DIR, "basecalling.log")
 
-DORADO_BIN = "softwares/dorado-0.7.0-linux-x64/bin/dorado"
+DORADO_BIN = "softwares/dorado-0.8.0-linux-x64/bin/dorado"
 DORADO_MODEL = "softwares/dorado_models/dna_r10.4.1_e8.2_400bps_sup@v5.0.0"
 
 # argument to define whether it was a 96 barcode run or not. Omitting this argument will default to 24 barcodes run
