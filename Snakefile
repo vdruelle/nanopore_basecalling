@@ -2,16 +2,17 @@
 import pathlib
 import time
 import os
+import sys
 
 
 # pass the path to the folder as and argument when calling snakemake: --congig input=PATH
-DATA_DIR = config["run_dir"]
-INPUT_DIR = DATA_DIR + "/raw"
-TMP_DIR = DATA_DIR + "/tmp"
-OUTPUT_DIR = DATA_DIR + "/final"
-STATISTICS_DIR = DATA_DIR + "/statistics"
+DATA_DIR = os.path.normpath(config["run_dir"])
+INPUT_DIR = os.path.join(DATA_DIR, "raw")
+TMP_DIR = os.path.join(DATA_DIR, "tmp")
+OUTPUT_DIR = os.path.join(DATA_DIR, "final")
+STATISTICS_DIR = os.path.join(DATA_DIR, "statistics")
 EXEC_TIME = time.strftime("%Y-%m-%d_%H:%M:%S", time.localtime())
-LOGFILE = DATA_DIR + "/basecalling.log"
+LOGFILE = os.path.join(DATA_DIR, "basecalling.log")
 
 DORADO_BIN = "softwares/dorado-0.7.0-linux-x64/bin/dorado"
 DORADO_MODEL = "softwares/dorado_models/dna_r10.4.1_e8.2_400bps_sup@v5.0.0"
@@ -33,6 +34,32 @@ BARCODES = [str(ii).zfill(2) for ii in range(1, NB_BARCODES + 1)]
 pathlib.Path("log").mkdir(exist_ok=True)
 
 
+# Check that DATA_DIR exists
+if not os.path.exists(DATA_DIR):
+    sys.exit(
+        f"Error: The data directory '{DATA_DIR}' does not exist. Make sure you gave the correct path for your folder."
+    )
+
+# Check that 'params.tsv' file exists in DATA_DIR
+params_file = os.path.join(DATA_DIR, "params.tsv")
+if not os.path.isfile(params_file):
+    sys.exit(
+        f"Error: The 'params.tsv' file is missing in '{DATA_DIR}'. Please create your params file and add it to your run folder."
+    )
+
+# Check that 'raw' directory exists in DATA_DIR
+if not os.path.isdir(INPUT_DIR):
+    sys.exit(
+        f"Error: The 'raw' directory is missing in '{DATA_DIR}'. Make sure that your in the right folder and that your raw data folder is correctly named."
+    )
+
+# Optionally, check if the 'raw' directory is not empty
+if not os.listdir(INPUT_DIR):
+    sys.exit(
+        f"Error: The 'raw' directory '{INPUT_DIR}' is empty. Please ensure that it contains the raw nanopore files."
+    )
+
+
 localrules:
     all,
     generate_log_file,
@@ -42,13 +69,13 @@ localrules:
 
 rule all:
     input:
-        barcodes=expand(OUTPUT_DIR + "/barcode_{barcode}.fastq.gz", barcode=BARCODES),
-        unclassified=OUTPUT_DIR + "/unclassified.fastq.gz",
-        plot1=STATISTICS_DIR + "/len_hist.png",
-        plot2=STATISTICS_DIR + "/bp_per_barcode.png",
-        plot3=STATISTICS_DIR + "/quality_mean.png",
-        plot4=STATISTICS_DIR + "/quality_std.png",
-        clean=DATA_DIR + "/.cleaned_dummy_file.txt",  # comment for debugging
+        barcodes=expand(os.path.join(OUTPUT_DIR, "barcode_{barcode}.fastq.gz"), barcode=BARCODES),
+        unclassified=os.path.join(OUTPUT_DIR, "unclassified.fastq.gz"),
+        plot1=os.path.join(STATISTICS_DIR, "len_hist.png"),
+        plot2=os.path.join(STATISTICS_DIR, "bp_per_barcode.png"),
+        plot3=os.path.join(STATISTICS_DIR, "quality_mean.png"),
+        plot4=os.path.join(STATISTICS_DIR, "quality_std.png"),
+        clean=os.path.join(DATA_DIR, ".cleaned_dummy_file.txt"),  # comment for debugging
 
 
 rule generate_log_file:
